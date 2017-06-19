@@ -16,12 +16,18 @@
 
 package com.expedia.hackathon.tomcat.web;
 
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.sns.AmazonSNSClient;
+import com.amazonaws.services.sns.model.PublishRequest;
+import com.amazonaws.services.sns.model.PublishResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.expedia.hackathon.tomcat.service.HelloWorldService;
+
+import java.io.IOException;
 
 @Controller
 public class SampleController {
@@ -35,4 +41,24 @@ public class SampleController {
 		return this.helloWorldService.getHelloMessage();
 	}
 
+
+	@RequestMapping("/send/notification")
+	@ResponseBody
+	public String sendNotification() throws IOException {
+		String accessKey="AKIAIQCPKW3DHONSGD7Q";
+		String secretKey="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";
+		AmazonSNSClient client = new AmazonSNSClient(new BasicAWSCredentials(accessKey,secretKey));
+//		String endpointArn="arn:aws:sns:us-east-1:571829491973:endpoint/GCM/offerpush/173f980a-0d02-3248-aea9-6fb05cdcbb61";
+		String endpointArn="arn:aws:sns:us-east-1:571829491973:endpoint/GCM/offerpush/bbdaf383-7f44-3693-b6f6-4acb541b4d21";
+		client.setEndpoint("https://sns.us-east-1.amazonaws.com");
+
+		PublishRequest request = new PublishRequest();
+		request.setTargetArn(endpointArn);
+		request.setMessage("{\n" +
+				"\"GCM\": \"{ \\\"data\\\": { \\\"message\\\": \\\"hello jai\\\" } }\"\n" +
+				"}");
+		request.setMessageStructure("json");
+		final PublishResult publishResult = client.publish(request);
+		return publishResult.getMessageId();
+	}
 }
